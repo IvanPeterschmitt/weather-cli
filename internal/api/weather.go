@@ -144,7 +144,10 @@ func getCurrentWeather(city *City, client *Client) (*CurrentWeather, error) {
 	}
 
 	var locations []CurrentWeather
-	json.Unmarshal(resp, &locations)
+	err = json.Unmarshal(resp, &locations)
+	if err != nil {
+		return nil, fmt.Errorf("error while reading JSON data: %w", err)
+	}
 	if len(locations) == 0 {
 		return nil, fmt.Errorf("no weather station found")
 	}
@@ -182,13 +185,13 @@ func GetWeatherData(city *City, client *Client) (*WeatherData, error) {
 
 	wg.Go(func() {
 		var cw *CurrentWeather
-		cw, errForecast = getCurrentWeather(city, client)
+		cw, errCurrent = getCurrentWeather(city, client)
 		if cw == nil {
 			mu.Lock()
 			errPointer = fmt.Errorf("null pointer returned")
 			mu.Unlock()
 		}
-		if errForecast == nil {
+		if errCurrent == nil {
 			fullData.CurrentData = *cw
 		}
 	})
